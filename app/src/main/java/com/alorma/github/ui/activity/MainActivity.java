@@ -5,6 +5,7 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -22,13 +23,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.alorma.github.BuildConfig;
 import com.alorma.github.GitskariosApplication;
 import com.alorma.github.R;
 import com.alorma.github.sdk.bean.dto.response.User;
 import com.alorma.github.sdk.login.AccountsHelper;
-import com.alorma.github.sdk.security.StoreCredentials;
 import com.alorma.github.sdk.utils.GitskariosSettings;
+import com.alorma.github.sdk.utils.PreferencesHelper;
 import com.alorma.github.ui.activity.base.BaseActivity;
 import com.alorma.github.ui.activity.gists.GistsMainActivity;
 import com.alorma.github.ui.fragment.ChangelogDialogSupport;
@@ -39,11 +41,10 @@ import com.alorma.github.ui.fragment.repos.ReposFragment;
 import com.alorma.github.ui.fragment.repos.StarredReposFragment;
 import com.alorma.github.ui.fragment.repos.WatchedReposFragment;
 import com.alorma.github.ui.view.NotificationsActionProvider;
+import com.alorma.gitskarios.basesdk.client.StoreCredentials;
 import com.mikepenz.aboutlibraries.Libs;
-import com.mikepenz.aboutlibraries.util.Colors;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.iconics.IconicsDrawable;
-import com.mikepenz.iconics.IconicsDrawableOld;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.accountswitcher.AccountHeader;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
@@ -73,6 +74,12 @@ public class MainActivity extends BaseActivity implements OnMenuItemSelectedList
     private EventsListFragment eventsFragment;
     private NotificationsActionProvider notificationProvider;
 
+    public static final long SECONDS_PER_MINUTE = 60L;
+    public static final long SYNC_INTERVAL_IN_MINUTES = 60L;
+    public static final long SYNC_INTERVAL =
+            SYNC_INTERVAL_IN_MINUTES *
+                    SECONDS_PER_MINUTE;
+
     @Inject
     Bus bus;
 
@@ -83,6 +90,7 @@ public class MainActivity extends BaseActivity implements OnMenuItemSelectedList
     private Fragment lastUsedFragment;
     private NotificationsFragment notificationsFragment;
     private Drawer.Result resultDrawer;
+    private String KEY_SYNC = "KEY_SYNC";
 
     public static void startActivity(Activity context) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -299,6 +307,42 @@ public class MainActivity extends BaseActivity implements OnMenuItemSelectedList
     }
 
     private void selectAccount(final Account account) {
+
+        final PreferencesHelper settings = new PreferencesHelper(this);
+
+        if (!settings.containsKey(KEY_SYNC + "_" + account.name)) {
+            MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
+            builder.title(R.string.sync_notifications);
+            builder.content(R.string.sync_notifications_content);
+            builder.positiveText(R.string.yes);
+            builder.negativeText(R.string.no);
+            builder.neutralText(R.string.ask_again);
+            builder.callback(new MaterialDialog.ButtonCallback() {
+                @Override
+                public void onPositive(MaterialDialog dialog) {
+                    super.onPositive(dialog);
+                    settings.saveBooleanSetting(KEY_SYNC + "_" + account.name, true);
+                    ContentResolver.addPeriodicSync(
+                            account,
+                            getString(R.string.uri_content_provider),
+                            Bundle.EMPTY,
+                            SYNC_INTERVAL);
+                }
+
+                @Override
+                public void onNegative(MaterialDialog dialog) {
+                    super.onNegative(dialog);
+                    settings.saveBooleanSetting(KEY_SYNC + "_" + account.name, false);
+                    ContentResolver.removePeriodicSync(
+                            account,
+                            getString(R.string.uri_content_provider),
+                            Bundle.EMPTY);
+                }
+            })
+            .show();
+        }
+
+
         boolean changingUser = selectedAccount != null && !selectedAccount.name.equals(account.name);
         this.selectedAccount = account;
         credentials = new StoreCredentials(MainActivity.this);

@@ -4,6 +4,7 @@
     <string name="app_name">GitSkarios</string>
     <string name="account_name">Github account</string>
     <string name="account_type">com.alorma.github.account</string>
+    <string name="uri_content_provider">com.alorma.github.provider</string>
     <string name="oauth_scheme">gitskarios</string>
 
 </resources>

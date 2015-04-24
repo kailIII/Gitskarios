@@ -239,4 +239,13 @@
     <string name="ups">Ups…</string>
     <string name="issue_detail_error">There was an error loading %1$s\n%2$s</string>
     <string name="action_share_issue">Share issue</string>
+    <string name="notification_title">GitSkarios</string>
+    <string name="notification_text">%d notifications in GitHub</string>
+    <string name="sync_notifications">Sync notifications</string>
+    <string name="sync_notifications_content">Do you want to enable sync notifications in background</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="ask_again">ask late</string>
+    <string name="action_notifications_sync">Sync notifications</string>
+    <string name="select_account">Select account</string>
 </resources>

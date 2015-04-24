@@ -21,6 +21,9 @@
         android:defaultValue="@string/download_zip_value"/>
 
    <Preference
+        android:title="@string/action_notifications_sync"
+        android:key="notifications_sync"/>
+   <Preference
         android:title="@string/action_visit_gitskarios"
         android:key="gitskarios"/>
 
